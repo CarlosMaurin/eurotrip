@@ -19,14 +19,16 @@
     <!-- EL CÓDIGO COMPLETO DE TU APLICACIÓN REACT VA AQUÍ -->
     <script type="text/babel">
     
-    /* ========= FIX 1: TOMAR useState DE React ========= */
+    // Hook alias para usar useState sin romper nada
     const { useState } = React;
 
-    /* ========= FIX 2: PLACEHOLDERS PARA LOS ÍCONOS =========
-       (para que no reviente al renderizar; solo muestran un emoji mínimo)
-    */
-    const IconPlaceholder = ({ children, className = "" }) => (
-      <span className={className} style={{ display: "inline-block", lineHeight: 1 }}>
+    // Iconos simples para evitar errores en GitHub Pages
+    const IconPlaceholder = ({ children, className = "", ...rest }) => (
+      <span
+        className={className}
+        {...rest}
+        style={{ display: "inline-block", lineHeight: 1 }}
+      >
         {children}
       </span>
     );
@@ -46,7 +48,6 @@
     const Wine         = (props) => <IconPlaceholder {...props}>🍷</IconPlaceholder>;
     const List         = (props) => <IconPlaceholder {...props}>📋</IconPlaceholder>;
     const ArrowRight   = (props) => <IconPlaceholder {...props}>➡️</IconPlaceholder>;
-
     // --- TUS ARCHIVOS (Usando enlaces de Cloudinary para máxima fiabilidad) ---
     const AVATAR_1 = "https://res.cloudinary.com/deit2ncmp/image/upload/avatar1_vrcbah.png"; 
     const AVATAR_2 = "https://res.cloudinary.com/deit2ncmp/image/upload/avatar2_m9izdn.png"; 
@@ -575,3 +576,4 @@
     </script>
 </body>
 </html>
+
