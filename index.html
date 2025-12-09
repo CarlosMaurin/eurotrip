@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EuroTrip Quest 2026</title>
+    <!-- Carga de Tailwind CSS (para los estilos) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Carga de React y ReactDOM -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+    <!-- Carga de Babel (para entender JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- EL CÓDIGO DE TU APLICACIÓN REACT VA AQUÍ -->
+    <script type="text/babel">
+    import React, { useState } from 'react';
+import { Map, Snowflake, Utensils, Bed, Camera, ArrowRight, Bus, Wine, Music, ShoppingCart, Info, MapPin, Heart, List, DollarSign, RotateCcw } from 'lucide-react';
+
+// --- TUS ARCHIVOS (Usando enlaces de Cloudinary para máxima fiabilidad) ---
+const AVATAR_1 = "https://res.cloudinary.com/deit2ncmp/image/upload/avatar1_vrcbah.png"; 
+const AVATAR_2 = "https://res.cloudinary.com/deit2ncmp/image/upload/avatar2_m9izdn.png"; 
+const AVATAR_3 = "https://res.cloudinary.com/deit2ncmp/image/upload/avatar3_q4yxxs.png"; 
+const MAP_BG = "https://res.cloudinary.com/deit2ncmp/image/upload/mapa_qnthdq.png";      
+const PROPOSAL_IMG = "https://res.cloudinary.com/deit2ncmp/image/upload/foto_propuesta_z4f61d.png"; 
+
+// --- CONFIGURACIÓN DEL WEBHOOK (¡URL REAL DE N8N PROPORCIONADA!) ---
+const N8N_WEBHOOK_URL = "https://n8n.inmob1n8n.shop/webhook/eurotrip";
+// --- FIN CONFIGURACIÓN WEBHOOK ---
+
+// --- ESTILOS & FUENTES ---
+const RetroStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    .font-retro { font-family: 'Press Start 2P', cursive; }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    
+    @keyframes aurora {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .aurora-bg {
+      background: linear-gradient(270deg, #00ff87, #60efff, #0061ff, #60efff);
+      background-size: 400% 400%;
+      animation: aurora 15s ease infinite;
+    }
+
+    .pixelated { image-rendering: pixelated; }
+    
+    .modal-tab-active { background-color: white; border-bottom: 4px solid #3b82f6; font-weight: bold; color: #1e3a8a; }
+    .modal-tab-inactive { background-color: #e5e7eb; color: #6b7280; }
+    
+    .list-item { list-style-type: none; margin-bottom: 4px; padding-left: 1.5em; position: relative; }
+    .list-item::before { content: '★'; color: #ffd700; position: absolute; left: 0; font-size: 0.8em; line-height: 1.4; }
+  `}</style>
+);
+
+// --- COMPONENTES SEGUROS ---
+const getImageUrl = (src) => `${src}`; 
+
+const AvatarCard = ({ src, label, onClick }) => {
+  const [error, setError] = useState(false);
+  return (
+    <div onClick={onClick} className="group cursor-pointer bg-white p-3 md:p-4 border-4 border-black hover:bg-yellow-100 transition-transform hover:scale-110 shadow-lg flex flex-col items-center w-32 md:w-40">
+      <div className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center overflow-hidden bg-gray-100 mb-2">
+        {!error ? <img src={getImageUrl(src)} alt={label} className="w-full h-full object-contain pixelated" onError={() => setError(true)} /> : <span className="text-4xl text-red-500">❌</span>}
+      </div>
+      <p className="text-[10px] md:text-xs font-bold text-gray-700">{label}</p>
+    </div>
+  );
+};
+
+const ProposalImageDisplay = ({ src }) => {
+  const [error, setError] = useState(false);
+  return (
+    <div className="w-full aspect-video bg-black border-8 border-white shadow-2xl mb-8 relative rounded-lg overflow-hidden flex items-center justify-center">
+      {!error ? (
+        <img src={getImageUrl(src)} alt="Propuesta" className="w-full h-full object-contain pixelated" onError={() => setError(true)} />
+      ) : (
+        <div className="text-white text-center p-10">
+            <p className="text-red-400">Error cargando {src}</p>
+            <p className="text-xs text-gray-400">Placeholder de la propuesta final</p>
+            <div className="mt-4 text-6xl">💍</div>
+        </div>
+      )}
+      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] p-1 px-2 rounded">Ivalo, Finlandia - Enero 2026</div>
+    </div>
+  );
+};
+
+// --- DATA SUPER DETALLADA (Se mantiene igual) ---
+const CITIES = [
+  {
+    id: 1,
+    name: "Barcelona",
+    country: "España",
+    coords: { x: 10, y: 85 },
+    stats: { dist: "Inicio", temp: "8-15°C" },
+    general: {
+      desc: "Capital catalana, cuna de Gaudí y el modernismo. En enero menos turistas, precios bajos y ambiente local auténtico. Perfecta para calçotadas de temporada.",
+      must: ["Sagrada Familia", "Park Güell", "Barrio Gótico", "La Barceloneta", "Mercado Boquería"],
+      tours: ["Free Walking Tour Gótico (propina)", "Casa Batlló ~€35"],
+      supermarkets: ["Mercadona (múltiples)", "Carrefour Express"],
+      transport: "A Núria: Tren RENFE a Ribes de Freser (~€12, 2h) + Cremallera (~€33 ida/vuelta)"
+    },
+    lodging: {
+      tips: "Zonas: El Raval (bohemio), Gràcia (local), Barceloneta (playa). Evitar Las Ramblas (caro/turístico).",
+      cost: "Hostal €25-45/noche, Hotel 3* €60-90/noche"
+    },
+    food: {
+      typical: ["Pa amb tomàquet", "Calçots con romesco (temporada ene-mar)", "Fideuà", "Crema catalana", "Butifarra con mongetes"],
+      spots: ["Can Culleretes (1786, el más antiguo)", "La Boquería (tapeo)", "Ca l'Estevet (tradicional)"],
+      nightlife: ["L'Ànima del Vi (vinos naturales, Born)", "La Vinya del Senyor (frente Santa María del Mar)", "Bodega Joan (tapas+vinos, 80 años)", "Jamboree Jazz Club"]
+    },
+    wine: {
+      regions: "DO Penedès, DO Priorat, Cava",
+      grapes: "Xarel·lo, Macabeo, Parellada (blancos), Garnacha, Cariñena (tintos)",
+      try: "Cava Brut Nature, vinos de Priorat, Xarel·lo del Penedès"
+    },
+    ski: null,
+    img: "🏰"
+  },
+  {
+    id: 2,
+    name: "Vall de Núria",
+    country: "España",
+    coords: { x: 15, y: 75 },
+    stats: { dist: "~120 km", temp: "-5 a 5°C" },
+    general: {
+      desc: "Valle pirenaico accesible solo en tren cremallera o a pie. Santuario a 2.000m de altitud, ambiente familiar y paisajes de postal. Ideal para iniciarse en esquí.",
+      must: ["Santuario de Núria", "Lago del Valle", "Mirador Pic de l'Àliga", "Paseo raquetas de nieve"],
+      tours: ["TreNatura (cremallera+actividades ~€45)", "Ruta guiada raquetas ~€25"],
+      supermarkets: ["Tienda del Santuario (básicos)", "Comprar en Ribes de Freser antes de subir"],
+      transport: "A Andorra: Bus Ribes→La Seu d'Urgell→Andorra (~€15-20, 3h)"
+    },
+    lodging: {
+      tips: "Solo 2 opciones en el valle. Reservar con antelación en temporada de esquí.",
+      cost: "Alberg Pic de l'Àliga €25-40/persona, Hotel Vall de Núria €80-120/noche"
+    },
+    food: {
+      typical: ["Escudella i carn d'olla", "Trinxat", "Embutidos del Ripollès", "Mel i mató"],
+      spots: ["Restaurante del Santuario", "Cafetería Alberg Pic de l'Àliga"],
+      nightlife: ["Sin wine bars - ambiente familiar/montaña", "Vino caliente en el Santuario"]
+    },
+    wine: {
+      regions: "Traer vino de Barcelona o Ribes",
+      grapes: "Zona no vinícola",
+      try: "Vinos del Empordà cercano"
+    },
+    ski: {
+      resort: "Vall de Núria (familiar, 7.6 km pistas)",
+      access: "Cremallera desde Ribes de Freser (20 min) - incluido acceso",
+      cost: "Forfait ~€27/día, Alquiler equipo ~€22/día",
+      tips: "Estación pequeña ideal principiantes. Pistas verdes y azules. Alquiler en la estación misma."
+    },
+    img: "🏔️"
+  },
+  {
+    id: 3,
+    name: "Andorra la Vella",
+    country: "Andorra",
+    coords: { x: 20, y: 65 },
+    stats: { dist: "~90 km", temp: "-2 a 8°C" },
+    general: {
+      desc: "Microestado pirenaico entre España y Francia. Paraíso del esquí con Grandvalira (mayor estación del sur de Europa). Shopping libre de impuestos y termas en Caldea.",
+      must: ["Grandvalira (esquí)", "Caldea Spa", "Barri Antic", "Puente de la Margineda", "Mirador Roc del Quer"],
+      tours: ["Caldea spa €40-60", "Mushing trineo perros ~€80"],
+      supermarkets: ["Pyrénées (supermercado/mall)", "E.Leclerc"],
+      transport: "A Annecy: Bus Andorra→Toulouse (~€35, 3h) + TGV/Bus a Annecy (~€40, 4h)"
+    },
+    lodging: {
+      tips: "Andorra la Vella (céntrico, shopping). Soldeu/El Tarter (pie de pistas, más caro). Encamp (económico, funicular a pistas).",
+      cost: "Hostal €30-50/noche, Hotel 3* €50-80/noche, Packs Hotel+Forfait desde €90/día"
+    },
+    food: {
+      typical: ["Trinxat de montaña", "Escudella", "Caracoles a la llauna", "Civet de jabalí", "Coca andorrana"],
+      spots: ["Borda Estevet (tradicional, piedra y madera)", "Can Manel (desde 1979)", "La Borda del Rector"],
+      nightlife: ["Bacco Wine Bar (vinoteca elegante)", "13.5° Bar de Vins", "L'Abarset (après-ski legendario, DJs)"]
+    },
+    wine: {
+      regions: "Cim de Cel (vino andorrano, el más alto de Europa), importaciones francesas y españolas",
+      grapes: "Variado - influencia franco-catalana",
+      try: "Cim de Cel (local), vinos del Priorat y Languedoc"
+    },
+    ski: {
+      resort: "Grandvalira (210 km pistas, 128 remontes)",
+      access: "Funicular Encamp (gratis con forfait) o bus desde Andorra la Vella",
+      cost: "Forfait ~€55-65/día, Alquiler equipo ~€25-35/día, Packs 3 días desde €150",
+      tips: "Comprar forfait online con antelación. Sectores: Soldeu (intermedio), Pas de la Casa (avanzado), Canillo (familiar)."
+    },
+    img: "⛷️"
+  },
+  {
+    id: 4,
+    name: "Annecy",
+    country: "Francia",
+    coords: { x: 30, y: 55 },
+    stats: { dist: "~350 km", temp: "-2 a 7°C" },
+    general: {
+      desc: "La Venecia de los Alpes. Ciudad medieval con canales, lago cristalino y montañas nevadas. Base perfecta para esquiar en La Clusaz o Le Grand-Bornand.",
+      must: ["Vieille Ville (casco antiguo)", "Palais de l'Île", "Lago Annecy", "Château d'Annecy", "Pont des Amours"],
+      tours: ["Paseo en barco lago (no en enero)", "Raquetas Le Semnoz ~€25"],
+      supermarkets: ["Carrefour City", "Monoprix"],
+      transport: "A Aosta: Bus/tren a Chamonix (~€25, 2h) + Bus túnel Mont Blanc a Aosta (~€20, 1h)"
+    },
+    lodging: {
+      tips: "Vieille Ville (encantador, caro). Cerca estación tren (práctico). Talloires (lago, tranquilo).",
+      cost: "Hostel €30-45/noche, Hotel 2-3* €70-110/noche"
+    },
+    food: {
+      typical: ["Fondue savoyarde", "Raclette", "Tartiflette", "Diots (salchichas)", "Reblochon (queso)"],
+      spots: ["L'Auberge de Savoie (canal, tradicional)", "Le Denti (Bib Gourmand)", "Philippe Rigollot (pastelería premiada)"],
+      nightlife: ["Le Nid du Merle (wine bar)", "Le Bar Roux d'Heure (vinos locales)", "Concerts en cafés del casco antiguo"]
+    },
+    wine: {
+      regions: "Vins de Savoie, Vin Chaud (imperdible en invierno)",
+      grapes: "Jacquère, Altesse, Mondeuse (autóctonas de Savoie)",
+      try: "Apremont, Chignin-Bergeron, Mondeuse de Savoie"
+    },
+    ski: {
+      resort: "La Clusaz (125 km pistas) / Le Grand-Bornand (84 km) / Le Semnoz (cercano)",
+      access: "Bus desde Annecy: La Clusaz 40 min, Le Semnoz 20 min",
+      cost: "Forfait La Clusaz ~€48/día, Alquiler ~€25/día",
+      tips: "Le Semnoz ideal para día corto. La Clusaz para esquí serio. Aravis ski pass cubre toda la zona."
+    },
+    img: "🏰"
+  },
+  {
+    id: 5,
+    name: "Aosta",
+    country: "Italia",
+    coords: { x: 40, y: 45 },
+    stats: { dist: "~100 km", temp: "-4 a 6°C" },
+    general: {
+      desc: "Roma de los Alpes. Ciudad con ruinas romanas impresionantes rodeada de los picos más altos de Europa (Mont Blanc, Cervino, Monte Rosa). Valle bilingüe italiano-francés.",
+      must: ["Arco de Augusto", "Teatro Romano", "Porta Praetoria", "Catedral de Aosta", "Teleférico Pila"],
+      tours: ["Tour ruinas romanas (gratis/guiado €15)", "Degustación Fontina €20"],
+      supermarkets: ["Carrefour", "Coop"],
+      transport: "A Trento: Tren Aosta→Milano→Trento (~€35-50, 4-5h)"
+    },
+    lodging: {
+      tips: "Centro histórico (caminar a todo). Pila (pie de pistas). Cogne (valle tranquilo).",
+      cost: "B&B €40-60/noche, Hotel 3* €70-100/noche"
+    },
+    food: {
+      typical: ["Fontina DOP (queso rey)", "Carbonada valdostana", "Polenta concia", "Lardo di Arnad", "Tegole (galletas)"],
+      spots: ["Vecchio Ristoro (estrella Michelin)", "Osteria da Nando (tradicional)", "Trattoria degli Artisti"],
+      nightlife: ["Enoteca Champagner (vinos Valle d'Aosta)", "La Cave di Mastro Geppetto", "Vida nocturna tranquila, cafés del centro"]
+    },
+    wine: {
+      regions: "Valle d'Aosta DOC (la más pequeña de Italia, vinos de altura)",
+      grapes: "Petit Rouge, Fumin, Prié Blanc (autóctonas alpinas)",
+      try: "Torrette, Chambave Muscat, Blanc de Morgex (viñedo más alto de Europa)"
+    },
+    ski: {
+      resort: "Pila (70 km pistas) / Courmayeur (Mont Blanc) / Cervinia",
+      access: "Teleférico Aosta-Pila desde el centro (8 min), Bus a Courmayeur 45 min",
+      cost: "Forfait Pila ~€42/día, Courmayeur ~€58/día, Alquiler ~€25/día",
+      tips: "Pila accesible directo desde ciudad. Courmayeur más exclusivo. Skyway Monte Bianco imperdible aunque no esquíes."
+    },
+    img: "🏛️"
+  },
+  {
+    id: 6,
+    name: "Trento",
+    country: "Italia",
+    coords: { x: 55, y: 40 },
+    stats: { dist: "~280 km", temp: "-2 a 8°C" },
+    general: {
+      desc: "Capital del Trentino, donde se celebró el histórico Concilio. Ciudad elegante entre montañas dolomíticas con excelente calidad de vida y gastronomía de fusión austro-italiana.",
+      must: ["Piazza Duomo", "Castello del Buonconsiglio", "MUSE (museo ciencia)", "Teleférico Sardagna", "Mercatini di Natale (si llegas a tiempo)"],
+      tours: ["Visita Buonconsiglio €10", "Tour bodegas Trentodoc ~€30"],
+      supermarkets: ["Poli", "Conad"],
+      transport: "A Trieste: Tren directo Trento→Trieste (~€20-30, 3h)"
+    },
+    lodging: {
+      tips: "Centro storico (todo a pie). Zona estación (práctico). Pergine (lago, tranquilo).",
+      cost: "B&B €35-55/noche, Hotel 3* €60-90/noche"
+    },
+    food: {
+      typical: ["Canederli (gnocchi de pan)", "Strangolapreti", "Speck del Trentino", "Polenta e funghi", "Strudel"],
+      spots: ["Scrigno del Duomo (alta cocina)", "Osteria Le Due Spade (histórica)", "Pedavena (cervecería tradicional)"],
+      nightlife: ["Enoteca Lunelli (cuna del Trentodoc)", "Wine Bar Duomo", "Santa Chiara Lab (música en vivo)"]
+    },
+    wine: {
+      regions: "Trentino DOC, Trentodoc (espumoso metodo classico)",
+      grapes: "Teroldego, Marzemino, Nosiola, Chardonnay",
+      try: "Trentodoc (rival del champagne), Teroldego Rotaliano, Marzemino (el vino de Don Giovanni)"
+    },
+    ski: {
+      resort: "Monte Bondone (40 km pistas) / Paganella / Dolomiti di Brenta",
+      access: "Bus Trento-Monte Bondone 30 min, Paganella 40 min",
+      cost: "Forfait Bondone ~€35/día, Paganella ~€45/día, Alquiler ~€25/día",
+      tips: "Bondone cercano y económico. Paganella más grande. Superskirama pass para toda la zona."
+    },
+    img: "🍺"
+  },
+  {
+    id: 7,
+    name: "Trieste",
+    country: "Italia",
+    coords: { x: 65, y: 50 },
+    stats: { dist: "~200 km", temp: "2-10°C" },
+    general: {
+      desc: "Ciudad portuaria con alma mitteleuropea. Antigua joya del Imperio Austrohúngaro, capital mundial del café y refugio de escritores como Joyce. Mezcla única de culturas italiana, eslovena y austriaca.",
+      must: ["Piazza Unità d'Italia", "Castello di Miramare", "Canal Grande", "Caffè storici", "Barrio Cavana"],
+      tours: ["Miramare €10", "Tour literario Joyce gratis/guiado"],
+      supermarkets: ["Eurospar", "Despar"],
+      transport: "A Vipava: Bus Trieste→Nova Gorica (~€8, 1.5h) + Bus local a Vipava (~€5, 30 min)"
+    },
+    lodging: {
+      tips: "Centro (Piazza Unità). Barcola (costa, tranquilo). Cerca estación (conexiones).",
+      cost: "B&B €35-55/noche, Hotel 3* €55-85/noche"
+    },
+    food: {
+      typical: ["Jota (sopa de chucrut)", "Prosciutto di Trieste", "Sardoni in savor", "Strucolo de mele", "Caffe triestino"],
+      spots: ["Buffet da Pepi (histórico desde 1897)", "Suban (cocina carso)", "Antipastoteca di Mare"],
+      nightlife: ["Enoteca Bere Buono (vinos Carso y Friuli)", "Caffè San Marco (histórico, vinos)", "Antico Caffè Torinese (jazz ocasional)"]
+    },
+    wine: {
+      regions: "Carso DOC, Collio, Friuli Venezia Giulia",
+      grapes: "Vitovska, Malvasia istriana, Terrano (autóctonas del Carso)",
+      try: "Vitovska (mineral, único), Terrano (tinto intenso), vinos macerados/orange wines"
+    },
+    ski: {
+      resort: "Sella Nevea (más cercana, ~1.5h) / Tarvisio / Kranjska Gora (Eslovenia)",
+      access: "Bus/coche a Sella Nevea 1.5h, Kranjska Gora 1h (Eslovenia)",
+      cost: "Forfait Sella Nevea ~€38/día, Kranjska Gora ~€40/día",
+      tips: "No es destino de esquí principal. Mejor ir a Eslovenia si quieres pistas. Trieste es más para cultura y gastronomía."
+    },
+    img: "☕"
+  },
+  {
+    id: 8,
+    name: "Valle de Vipava",
+    country: "Eslovenia",
+    coords: { x: 75, y: 50 },
+    stats: { dist: "~50 km", temp: "0-8°C" },
+    general: {
+      desc: "Secreto mejor guardado del vino europeo. Valle esloveno con microclima mediterráneo, vinos naturales excepcionales y pueblos medievales. Sin turismo masivo, precios excelentes.",
+      must: ["Bodegas (Guerila, Burja, Batič)", "Castillo de Vipava", "Pueblo de Goče", "Ajdovščina", "Ruta del vino"],
+      tours: ["Wine tour con catas ~€40-60", "Visita bodega individual ~€15-25"],
+      supermarkets: ["Mercator", "Spar (en Ajdovščina)"],
+      transport: "A Ivalo: Vuelo Ljubljana→Helsinki (~€100-150) + Vuelo/tren a Ivalo (~€50-100)"
+    },
+    lodging: {
+      tips: "Agriturismos y casas de vino (experiencia auténtica). Ajdovščina (pueblo más grande). Vipava pueblo (céntrico).",
+      cost: "Agroturismo €40-70/noche (a menudo incluye desayuno/cena), Apartments €30-50/noche"
+    },
+    food: {
+      typical: ["Štruklji (rollitos)", "Jota (aquí también)", "Pršut (jamón del Karst)", "Žlikrofi", "Potica (pastel de nuez)"],
+      spots: ["Gostilna Pri Lojzetu (estrella Michelin, castillo)", "Majerija (granja restaurante)", "Zemono (bodega+restaurante)"],
+      nightlife: ["Guerila Wine Bar (vinos naturales revolucionarios)", "Burja Estate (orange wines)", "Batič (biodinámico, histórico)"]
+    },
+    wine: {
+      regions: "Vipavska Dolina (Valle de Vipava) - cuna de orange wines",
+      grapes: "Zelen, Pinela, Rebula (autóctonas únicas), Malvazija",
+      try: "Orange wine de Zelen, Rebula macerada, Pinela (solo existe aquí)"
+    },
+    ski: {
+      resort: "Vogel (Bohinj, ~1.5h) / Kranjska Gora (~1h)",
+      access: "Coche necesario o bus a Ljubljana + conexión",
+      cost: "Forfait Vogel ~€38/día, Kranjska Gora ~€42/día",
+      tips: "Valle no es para esquí sino para VINO. Si quieres esquiar, base mejor en Bohinj o Ljubljana."
+    },
+    img: "🍷"
+  },
+  {
+    id: 9,
+    name: "Ivalo (Laponia)",
+    country: "Finlandia",
+    coords: { x: 90, y: 15 },
+    stats: { dist: "~2500 km (vuelo)", temp: "-15 a -5°C" },
+    general: {
+      desc: "Laponia finlandesa, tierra de auroras boreales y noche polar. Enero es temporada alta para ver Northern Lights. Paisajes árticos, saunas, y cultura Sami. El gran final mágico del viaje.",
+      must: ["Auroras Boreales", "Safari huskies", "Saariselkä (pueblo cercano)", "Parque Nacional Urho Kekkonen", "Cultura Sami"],
+      tours: ["Aurora hunting tour ~€80-120", "Safari huskies ~€120-180", "Motonieve ~€100-150"],
+      supermarkets: ["K-Market Ivalo", "Sale"],
+      transport: "Vuelo Helsinki→Ivalo (1.5h) o tren nocturno Helsinki→Rovaniemi + bus"
+    },
+    lodging: {
+      tips: "Ivalo pueblo (servicios, económico). Saariselkä (resort, más caro). Cabañas con techo cristal (premium, reservar meses antes).",
+      cost: "Hostel/Cabin básica €50-80/noche, Hotel €80-120/noche, Glass igloo €300-500/noche"
+    },
+    food: {
+      typical: ["Reno (poronkäristys)", "Salmón ahumado", "Kalakukko (pastel de pescado)", "Bayas árticas", "Pan de centeno"],
+      spots: ["Kultahippu (tradicional lapon)", "Hotel Ivalo restaurant", "Saariselkä restaurants"],
+      nightlife: ["No hay wine bars tradicionales", "Bares de hotel con vistas a auroras", "Cultura tranquila, experiencias en naturaleza"]
+    },
+    wine: {
+      regions: "No es zona vinícola - licores locales",
+      grapes: "N/A",
+      try: "Lakka (licor de mora ártica), Koskenkorva vodka, cerveza Lapin Kulta"
+    },
+    ski: {
+      resort: "Saariselkä (15 km pistas, 200 km cross-country)",
+      access: "Bus Ivalo-Saariselkä 25 min (~€5)",
+      cost: "Forfait ~€38/día, Alquiler ~€30/día, Cross-country gratuito en muchas rutas",
+      tips: "Esquí principalmente cross-country. Pistas alpinas pequeñas pero con nieve garantizada. La magia está en auroras y naturaleza, no en el esquí."
+    },
+    img: "🌌"
+  }
+];
+
+
+// --- APP ---
+export default function App() {
+  const [screen, setScreen] = useState('intro');
+  const [avatar, setAvatar] = useState(null);
+  const [currentCityIdx, setCurrentCityIdx] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [modalTab, setModalTab] = useState('general');
+  const [noPos, setNoPos] = useState({ x: 0, y: 0 });
+
+  const currentCity = CITIES[currentCityIdx];
+
+  // Función para reiniciar el juego completamente
+  const resetGame = () => {
+    setScreen('intro');
+    setAvatar(null);
+    setCurrentCityIdx(0);
+    setShowModal(false);
+    setModalTab('general');
+    setNoPos({ x: 0, y: 0 });
+  };
+
+  // FUNCIÓN PARA ENVIAR EL WEBHOOK A N8N
+  const sendWebhook = async (response) => {
+    // Si la URL real está vacía o es el placeholder, no hace nada
+    if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL.includes("your.n8n.webhook.url")) {
+      console.warn("ADVERTENCIA: URL de webhook no configurada/válida. Saltando envío.");
+      return;
+    }
+    
+    try {
+      console.log(`Intentando enviar respuesta a n8n: ${response}`);
+      
+      const payload = {
+        timestamp: new Date().toISOString(),
+        response: response,
+        avatar_selected: avatar,
+        final_city: CITIES[CITIES.length - 1].name
+      };
+
+      const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!webhookResponse.ok) {
+        console.error('Error al enviar webhook (Respuesta no OK):', webhookResponse.status, webhookResponse.statusText);
+      } else {
+        console.log('Webhook enviado con éxito.');
+      }
+    } catch (error) {
+      // Capturamos silenciosamente el error de conexión (Failed to fetch)
+      console.error('Fallo en la conexión del webhook (Revisa la URL/CORS):', error.message);
+    }
+  };
+
+
+  const handleProposalResponse = (responseType) => {
+    sendWebhook(responseType); 
+    
+    if (responseType === 'SI') {
+      setScreen('success');
+    } else if (responseType === 'AURORA_FAKE') {
+      resetGame();
+    }
+  };
+
+
+  const handleNextCity = () => {
+    setShowModal(false);
+    if (currentCityIdx < CITIES.length - 1) {
+      setCurrentCityIdx(prev => prev + 1);
+      setTimeout(() => {
+         setModalTab('general'); // Reset tab
+         setShowModal(true);
+      }, 1000);
+    } else {
+      setScreen('proposal');
+    }
+  };
+
+  const moveNo = () => setNoPos({ x: (Math.random() - 0.5) * 150, y: (Math.random() - 0.5) * 150 });
+
+  // PANTALLAS
+  if (screen === 'intro') return (
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 font-retro relative overflow-hidden text-center">
+      <RetroStyles />
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-50"></div>
+      <div className="z-10 border-4 border-white p-6 md:p-10 bg-blue-900 shadow-2xl max-w-2xl">
+        <h1 className="text-3xl md:text-5xl text-yellow-400 mb-6 leading-relaxed drop-shadow-[4px_4px_0_#000]">
+          EUROPE TRIP <br/><span className="text-white text-xl md:text-2xl">Quest 2026</span>
+        </h1>
+        <p className="text-white mb-8 text-xs md:text-sm leading-6 max-w-lg mx-auto">
+          9 Destinos. 4 Países. <br/>
+          Desde las tapas de Barcelona hasta las Auroras del Ártico.
+        </p>
+        <button onClick={() => setScreen('avatar')} className="bg-red-500 hover:bg-red-600 text-white py-4 px-8 border-b-8 border-r-8 border-red-800 active:border-0 active:translate-y-2 text-xl animate-pulse font-bold">
+          COMENZAR AVENTURA
+        </button>
+      </div>
+    </div>
+  );
+
+  if (screen === 'avatar') return (
+    <div className="min-h-screen bg-blue-500 flex flex-col items-center justify-center p-4 font-retro">
+      <h2 className="text-xl md:text-2xl text-white drop-shadow-md mb-8 bg-black/50 p-4 rounded border-2 border-white">ELIGE TU JUGADOR</h2>
+      <div className="flex flex-wrap gap-6 justify-center">
+        {/* AVATAR 1 -> Con Scuishi */}
+        <AvatarCard src={AVATAR_1} label="Con Scuishi" onClick={() => { setAvatar(AVATAR_1); setScreen('map'); setTimeout(() => setShowModal(true), 800); }} />
+        {/* AVATAR 2 -> Sommelier */}
+        <AvatarCard src={AVATAR_2} label="Sommelier" onClick={() => { setAvatar(AVATAR_2); setScreen('map'); setTimeout(() => setShowModal(true), 800); }} />
+        {/* AVATAR 3 -> Mochilera */}
+        <AvatarCard src={AVATAR_3} label="Mochilera" onClick={() => { setAvatar(AVATAR_3); setScreen('map'); setTimeout(() => setShowModal(true), 800); }} />
+      </div>
+    </div>
+  );
+
+  if (screen === 'proposal') return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-retro relative overflow-hidden text-center">
+      <div className="absolute inset-0 aurora-bg opacity-80"></div>
+      <div className="z-20 w-full max-w-4xl p-4 flex flex-col items-center">
+        <ProposalImageDisplay src={PROPOSAL_IMG} />
+        <div className="bg-blue-900/95 border-4 border-yellow-400 p-6 md:p-10 shadow-2xl backdrop-blur-sm animate-float rounded-lg max-w-2xl">
+          <h1 className="text-2xl md:text-4xl text-white mb-8 drop-shadow-[3px_3px_0_#000] leading-normal">
+            ¿Te querés casar conmigo?
+          </h1>
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+            {/* Botón SÍ - Llama al webhook con 'SI' */}
+            <button onClick={() => handleProposalResponse('SI')} className="bg-green-500 hover:bg-green-600 text-white text-lg py-4 px-10 border-b-4 border-green-800 rounded w-full md:w-auto transform hover:scale-105 transition-all">
+              ¡SÍ! <Heart size={16} fill="white" className="inline-block ml-1"/>
+            </button>
+            
+            {/* Botón NO (se mueve) */}
+            <div onMouseEnter={moveNo} onClick={moveNo} style={{ transform: `translate(${noPos.x}px, ${noPos.y}px)`, transition: 'all 0.2s' }}>
+              <button className="bg-red-500 text-white text-lg py-4 px-10 border-b-4 border-red-800 rounded w-full md:w-auto opacity-50 cursor-not-allowed">
+                NO 😢
+              </button>
+            </div>
+          </div>
+          
+          {/* Botón de chiste/reiniciar - Llama al webhook con 'AURORA_FAKE' y reinicia */}
+          <button onClick={() => handleProposalResponse('AURORA_FAKE')} className="mt-6 text-yellow-300 text-xs hover:text-white underline font-normal">
+             Buen intento pero no son auroras reales😝
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (screen === 'success') return (
+    <div className="min-h-screen bg-pink-600 flex flex-col items-center justify-center font-retro relative overflow-hidden text-center p-4">
+      <div className="absolute inset-0 aurora-bg opacity-50"></div>
+      <div className="z-20 p-8 border-8 border-white bg-pink-800/90 shadow-2xl rounded-xl max-w-lg">
+        <h1 className="text-3xl md:text-5xl text-yellow-300 mb-6 drop-shadow-lg animate-pulse">¡DIJO QUE SÍ! ❤️</h1>
+        <p className="text-white text-lg md:text-xl mb-8">Nivel Completado: COMPROMISO 💍</p>
+        <div className="flex justify-center mb-6">
+           {avatar ? <img src={getImageUrl(avatar)} className="w-40 h-40 object-contain animate-float pixelated" alt="Winner" /> : <div className="w-40 h-40 bg-gray-300 rounded flex items-center justify-center text-black">Avatar</div>}
+        </div>
+        <p className="text-white text-sm">Próxima parada: El Altar...</p>
+        <button onClick={resetGame} className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 border-b-4 border-blue-800 rounded flex items-center justify-center gap-2 font-bold mx-auto text-sm">
+          <RotateCcw size={16}/> REINICIAR JUEGO
+        </button>
+      </div>
+    </div>
+  );
+
+  // MAP SCREEN
+  return (
+    <div className="min-h-screen bg-blue-300 font-retro overflow-hidden relative">
+      <RetroStyles />
+      
+      {/* MAPA */}
+      <div className="absolute inset-0 flex items-center justify-center md:p-8">
+        <div className="relative w-full h-full max-w-7xl max-h-[90vh] bg-[#e3d5b8] border-8 border-[#5d4037] shadow-2xl rounded-lg overflow-hidden bg-cover bg-center"
+             style={{ backgroundImage: `url('${getImageUrl(MAP_BG)}')` }}>
+          
+          <div className="absolute inset-0 bg-black/10"></div> {/* Overlay sutil */}
+
+          {/* Ciudades (Puntos clickeables) */}
+          {CITIES.map((city, idx) => (
+            <div key={city.id} 
+              className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 z-10 cursor-pointer ${idx === currentCityIdx ? 'z-20 scale-125' : 'hover:scale-110'}`}
+              style={{ left: `${city.coords.x}%`, top: `${city.coords.y}%` }}
+              onClick={() => { setCurrentCityIdx(idx); setShowModal(true); }}
+            >
+              <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full border-4 shadow-lg flex items-center justify-center ${idx <= currentCityIdx ? 'bg-yellow-400 border-black' : 'bg-gray-400 border-gray-600'}`}>
+                 {idx === currentCityIdx && <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"/>}
+              </div>
+              <span className="absolute top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-2 py-1 rounded border border-white whitespace-nowrap shadow-lg">
+                {city.name}
+              </span>
+            </div>
+          ))}
+
+          {/* Avatar (Se mueve al punto de la ciudad actual) */}
+          <div className="absolute w-12 h-12 md:w-16 md:h-16 transition-all duration-[2000ms] ease-in-out z-30 -mt-10 -ml-6 pointer-events-none"
+             style={{ left: `${currentCity.coords.x}%`, top: `${currentCity.coords.y}%` }}>
+             {avatar && <img src={getImageUrl(avatar)} className="w-full h-full object-contain pixelated animate-float" alt="Player" />}
+          </div>
+
+          {/* HUD Stats */}
+          <div className="absolute top-4 left-4 bg-blue-900/90 text-white p-3 border-4 border-white rounded shadow-lg z-40 max-w-[200px]">
+            <h3 className="text-yellow-400 text-xs mb-2 border-b border-white/30 pb-1">ESTADÍSTICAS</h3>
+            <p className="text-[10px] mb-1">📍 {currentCity.name}</p>
+            <p className="text-[10px] mb-1">🌡️ {currentCity.stats.temp}</p>
+            <p className="text-[10px] mb-2">🚗 {currentCity.stats.dist}</p>
+            <button onClick={() => setShowModal(true)} className="w-full bg-green-500 text-[10px] py-2 hover:bg-green-600 border-b-4 border-green-700 active:border-b-0 rounded font-bold flex justify-center gap-1 items-center">
+              <Info size={12}/> ABRIR GUÍA
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* MODAL DETALLADO */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 md:p-6 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-4xl h-[90vh] md:h-[85vh] flex flex-col border-4 md:border-8 border-blue-900 rounded-lg shadow-2xl animate-float overflow-hidden">
+            
+            {/* Header Modal */}
+            <div className="bg-blue-900 text-white p-4 flex justify-between items-start shrink-0">
+              <div>
+                <h2 className="text-xl md:text-2xl text-yellow-400 font-bold mb-1 flex items-center gap-2">
+                  <MapPin size={24}/> {currentCity.name}
+                </h2>
+                <span className="text-xs bg-blue-700 px-2 py-1 rounded text-blue-200">{currentCity.country}</span>
+              </div>
+              <button onClick={() => setShowModal(false)} className="text-2xl hover:text-red-400 transition-colors">✖</button>
+            </div>
+
+            {/* Pestañas de Navegación */}
+            <div className="flex bg-gray-100 border-b-4 border-gray-300 overflow-x-auto shrink-0 no-scrollbar">
+               {[
+                 { id: 'general', icon: Map, label: 'Turismo' },
+                 { id: 'ski', icon: Snowflake, label: 'Nieve/Ski' },
+                 { id: 'food', icon: Utensils, label: 'Gastro/Fiesta' },
+                 { id: 'lodging', icon: Bed, label: 'Alojamiento/Tips' }
+               ].map((tab) => (
+                 <button 
+                    key={tab.id}
+                    onClick={() => setModalTab(tab.id)} 
+                    className={`flex-1 p-3 md:p-4 text-xs md:text-sm whitespace-nowrap flex items-center justify-center gap-2 transition-colors ${modalTab === tab.id ? 'modal-tab-active' : 'modal-tab-inactive hover:bg-gray-200'}`}
+                    disabled={tab.id === 'ski' && !currentCity.ski}
+                    style={{ opacity: tab.id === 'ski' && !currentCity.ski ? 0.5 : 1 }}
+                 >
+                    <tab.icon size={16}/> {tab.label}
+                 </button>
+               ))}
+            </div>
+
+            {/* Contenido Scrollable */}
+            <div className="p-4 md:p-8 overflow-y-auto flex-1 bg-[url('https://www.transparenttextures.com/patterns/graphy.png')] font-sans">
+              
+              {modalTab === 'general' && (
+                <div className="space-y-6 animate-fadeIn">
+                   <div className="text-center text-6xl mb-4 filter drop-shadow-lg">{currentCity.img}</div>
+                   
+                   {/* Sección 1: Descripción */}
+                   <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
+                      <h3 className="font-bold text-blue-900 mb-2 font-retro text-xs">RESUMEN</h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">{currentCity.general.desc}</p>
+                   </div>
+                   
+                   <div className="grid md:grid-cols-2 gap-4">
+                      {/* Sección 2: Imperdibles */}
+                      <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm">
+                         <h4 className="font-bold text-yellow-800 text-xs mb-2 flex items-center gap-2"><Camera size={14}/> IMPERDIBLES (MUST)</h4>
+                         <ul className="text-xs text-gray-700">
+                           {currentCity.general.must.map((item, i) => <li key={i} className="list-item">{item}</li>)}
+                         </ul>
+                      </div>
+                      
+                      {/* Sección 3: Tours */}
+                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 shadow-sm">
+                         <h4 className="font-bold text-purple-800 text-xs mb-2 flex items-center gap-2"><DollarSign size={14}/> TOURS RECOMENDADOS</h4>
+                         <ul className="text-xs text-gray-700">
+                           {currentCity.general.tours.map((item, i) => <li key={i} className="list-item">{item}</li>)}
+                         </ul>
+                      </div>
+                   </div>
+
+                   {/* Sección 4: Supermercados y Transporte */}
+                   <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-green-50 p-3 rounded border border-green-200 flex items-start gap-3 shadow-sm">
+                        <ShoppingCart size={16} className="text-green-600 shrink-0 mt-1"/>
+                        <div>
+                          <h4 className="font-bold text-green-800 text-xs">Supermercados (Ahorro)</h4>
+                          <ul className="text-xs text-gray-600 pl-4 list-disc list-outside">
+                            {currentCity.general.supermarkets.map((item, i) => <li key={i}>{item}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                      <div className="bg-indigo-50 p-3 rounded border border-indigo-200 flex items-start gap-3 shadow-sm">
+                        <Bus size={16} className="text-indigo-600 shrink-0 mt-1"/>
+                        <div>
+                          <h4 className="font-bold text-indigo-800 text-xs">Conexión a Siguiente Destino</h4>
+                          <p className="text-xs text-gray-600">{currentCity.general.transport}</p>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+              )}
+
+              {modalTab === 'ski' && currentCity.ski && (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="bg-blue-600 text-white p-6 rounded-lg shadow-lg text-center">
+                    <h3 className="text-2xl font-bold mb-2 font-retro">{currentCity.ski.resort}</h3>
+                    <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 text-sm font-bold">
+                      <span className="bg-white/20 px-3 py-1 rounded">🎟️ Forfait: {currentCity.ski.cost}</span>
+                      <span className="bg-white/20 px-3 py-1 rounded">🎿 Alquiler: ~€25-35</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border-2 border-blue-100 p-5 rounded-lg shadow-sm">
+                    <h4 className="text-blue-900 font-bold mb-3 flex items-center gap-2 font-retro text-xs"><Bus size={16}/> CÓMO LLEGAR A PISTA</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed">{currentCity.ski.access}</p>
+                  </div>
+
+                  <div className="bg-yellow-50 border-2 border-yellow-100 p-5 rounded-lg shadow-sm">
+                    <h4 className="text-yellow-900 font-bold mb-3 flex items-center gap-2 font-retro text-xs"><Info size={16}/> CONSEJOS ÚTILES</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed">{currentCity.ski.tips}</p>
+                  </div>
+                </div>
+              )}
+
+              {modalTab === 'food' && (
+                <div className="space-y-5 animate-fadeIn">
+                   
+                   {/* Comida Típica */}
+                   <div className="bg-orange-50 p-4 border-l-4 border-orange-500 rounded shadow-sm">
+                     <h3 className="flex items-center gap-2 font-bold text-orange-800 mb-2 font-retro text-xs"><Utensils size={16}/> PLATOS TÍPICOS</h3>
+                     <ul className="text-sm text-gray-700 pl-4 list-disc list-outside">
+                        {currentCity.food.typical.map((item, i) => <li key={i}>{item}</li>)}
+                     </ul>
+                   </div>
+                   
+                   <div className="grid md:grid-cols-2 gap-4">
+                      {/* Dónde Comer */}
+                      <div className="bg-white p-4 border border-gray-200 rounded shadow-sm">
+                        <h4 className="font-bold text-gray-800 text-xs mb-2 flex items-center gap-2"><MapPin size={14}/> RESTAURANTES/SPOTS</h4>
+                        <ul className="text-xs text-gray-600">
+                           {currentCity.food.spots.map((item, i) => <li key={i} className="list-item">🍽️ {item}</li>)}
+                        </ul>
+                      </div>
+                      
+                      {/* Vida Nocturna / Wine Bars */}
+                      <div className="bg-white p-4 border border-gray-200 rounded shadow-sm">
+                        <h4 className="font-bold text-gray-800 text-xs mb-2 flex items-center gap-2"><Wine size={14}/> NOCTURNA / WINE BARS</h4>
+                        <ul className="text-xs text-gray-600">
+                           {currentCity.food.nightlife.map((item, i) => <li key={i} className="list-item">🥂 {item}</li>)}
+                        </ul>
+                      </div>
+                   </div>
+
+                   {/* Sección Vinos Locales */}
+                   <div className="bg-pink-50 p-4 rounded-lg border-l-4 border-pink-500 shadow-sm">
+                      <h3 className="font-bold text-pink-900 mb-2 font-retro text-xs">Vinos Locales ({currentCity.wine.regions})</h3>
+                      <p className="text-xs text-gray-700">**Uvas Clave:** {currentCity.wine.grapes}</p>
+                      <p className="text-xs text-gray-700 mt-1">**Para Probar:** {currentCity.wine.try}</p>
+                   </div>
+                </div>
+              )}
+
+              {modalTab === 'lodging' && (
+                <div className="space-y-5 animate-fadeIn">
+                   <div className="bg-indigo-50 p-5 border-dashed border-2 border-indigo-300 rounded-lg shadow-lg">
+                     <h3 className="flex items-center gap-2 font-bold text-indigo-900 mb-3 font-retro text-xs"><Bed size={16}/> DÓNDE ALOJARSE (Ene 2026)</h3>
+                     <p className="text-sm text-gray-700 mb-4">{currentCity.lodging.tips}</p>
+                     <div className="bg-white p-3 rounded text-center border border-indigo-100">
+                       <span className="text-xs font-bold text-indigo-600">Costos estimados por noche (Ene '26):</span>
+                       <p className="text-sm text-gray-800 mt-1">{currentCity.lodging.cost}</p>
+                     </div>
+                   </div>
+                   
+                   {/* Notas Adicionales */}
+                   <div className="bg-gray-100 p-4 rounded-lg border-l-4 border-gray-400 shadow-sm">
+                      <h4 className="font-bold text-gray-700 text-xs mb-2 flex items-center gap-2"><List size={14}/> NOTAS DE VIAJE</h4>
+                      <ul className="text-xs text-gray-600 list-disc pl-4">
+                        <li>Recuerda que enero es temporada alta de esquí: reserva alojamiento y forfaits con antelación.</li>
+                      </ul>
+                   </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Footer Navegación */}
+            <div className="p-4 bg-gray-50 border-t-4 border-gray-300 text-right flex justify-end shrink-0">
+               {currentCityIdx < CITIES.length - 1 ? (
+                 <button onClick={handleNextCity} className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 border-b-4 border-green-800 rounded active:translate-y-1 active:border-b-0 flex items-center gap-2 font-retro text-xs md:text-sm transition-all shadow-lg">
+                   SIGUIENTE NIVEL <ArrowRight size={16}/>
+                 </button>
+               ) : (
+                 <button onClick={handleNextCity} className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 border-b-4 border-purple-900 rounded animate-pulse flex items-center gap-2 font-retro text-xs md:text-sm shadow-lg">
+                   DESTINO FINAL <Heart size={16} fill="white"/>
+                 </button>
+               )}
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+
+    </script>
+</body>
+</html>
